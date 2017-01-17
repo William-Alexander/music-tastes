@@ -20,17 +20,16 @@ while not last_page:
 		print album.a.get_text()
 
 	older = soup.find_all("div", class_="older")
-	print older
+	#print older
 
 	if older:
 		url = site_prefix + older[0].a["href"]
-		time.sleep(72) 
+		time.sleep(1) 
 	else:
 		last_page = True
 
 print len(all_entries)
-for entry in all_entries:
-	print entry
+
 
 
 
