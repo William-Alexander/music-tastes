@@ -1,4 +1,4 @@
-from urllib2 import urlopen
+import urllib2
 from bs4 import BeautifulSoup
 import time
 
@@ -8,9 +8,11 @@ site_prefix = "http://www.theneedledrop.com"
 all_entries = []
 url = start_url
 last_page = False
+hdr = {'User-Agent': 'your music nerd friend, Will :)'}
 
 while not last_page:
-	html = urlopen(url)
+	req = urllib2.Request(url, headers=hdr)
+	html = urllib2.urlopen(req).read()
 	soup = BeautifulSoup(html, "html.parser")
 
 	page_entries = soup.find_all("h1", class_="entry-title")
