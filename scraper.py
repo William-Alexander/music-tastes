@@ -14,7 +14,6 @@ def scrape_needledrop(rating):
 	all_entries = []
 	url = start_url
 	last_page = False
-	hdr = {'User-Agent': 'your music nerd friend, Will :)'}
 
 	file_name = "needledrop" + str(rating) + ".txt"
 	f = open(file_name, 'w')
