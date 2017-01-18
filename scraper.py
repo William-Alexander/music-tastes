@@ -89,7 +89,14 @@ def scrape_pitchfork(album):
 	if len(reviews) <= 0:
 		return -1
 	else:
-		big_ol_div = reviews[0]
+		# Shit, I need to grab the correct one. The first one isn't
+		# always right.
+		big_ol_div = ""
+		for index, review in enumerate(reviews):
+			if review.find(class_="title").string.lower() == album.lower():
+				big_ol_div = reviews[index]
+		if big_ol_div is "":
+			big_ol_div = reviews[0]
 		relative_url = big_ol_div.find(class_="album-link")["href"]
 
 		url2 = base_url + relative_url
@@ -101,8 +108,21 @@ def scrape_pitchfork(album):
 		score = soup.find(class_="score").string
 		return float(score)
 
+# Let's get a list of the Needle Drop albums
+with open("needledrop.txt") as f:
+	content = f.readlines()
+content = [x.strip("\n") for x in content]
+content = [x.split(" - ")[0] for x in content]
 
+# Now, let's get all the album reviews we can, and write them
+# to the pitchfork.txt file.
 
-
-
+'''
+with open("pitchfork.txt", 'w') as f:
+	for album in content:
+		album_score = scrape_pitchfork(album)
+		print album + " - " + str(album_score)
+		if album_score > 0:
+			f.write(album + " - " + str(album_score) + "\n")
+'''
 
