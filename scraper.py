@@ -1,50 +1,107 @@
 import sys
+import urllib2
 import requests
 from bs4 import BeautifulSoup
 import time
 
-def scrape_needledrop(rating):
-	def init_start_url(rating):
-		return ("http://www.theneedledrop.com/articles/?tag=" + 
-				str(rating) + "%2F10")
-
-	start_url = init_start_url(rating)
+'''
+Should grab every album from the Needle Drop site and 
+associate it with a rating like "my_album - 5"
+'''
+def scrape_needledrop():
 
 	site_prefix = "http://www.theneedledrop.com"
 	all_entries = []
-	url = start_url
-	last_page = False
-
-	file_name = "needledrop" + str(rating) + ".txt"
+	file_name = "needledrop.txt"
 	f = open(file_name, 'w')
 
-	while not last_page:
-		r = requests.get(url)
-		soup = BeautifulSoup(r.text, "html.parser")
+	# Range of potential ratings
+	for i in xrange(0, 11):
+		def init_start_url(rating):
+			return ("http://www.theneedledrop.com/articles/?tag=" + 
+					str(rating) + "%2F10")
 
-		# Check to see if we've been sending too many requests
-		# If so, just wait a second and try again! :)
-		if soup.title.string == "429 Too Many Requests":
-			time.sleep(1)
-			continue
+		start_url = init_start_url(i)
 
-		page_entries = soup.find_all("h1", class_="entry-title")
+		url = start_url
+		last_page = False
 
-		for album in page_entries:
-			all_entries.append(album.a.get_text())
-			print album.a.get_text()
-			f.write((album.a.get_text().encode('ascii', 'ignore')) + "\n")
+		while not last_page:
+			r = requests.get(url)
+			soup = BeautifulSoup(r.text, "html.parser")
 
-		older = soup.find(class_="older")
+			# Check to see if we've been sending too many requests
+			# If so, just wait a second and try again! :)
+			if soup.title.string == "429 Too Many Requests":
+				time.sleep(1)
+				continue
 
-		if older is not None and older.string:
-			url = site_prefix + older.a["href"]
-			time.sleep(0.5) 
-		else:
-			last_page = True
+			page_entries = soup.find_all("h1", class_="entry-title")
+
+			for album in page_entries:
+				# So we want to get rid of the artist name, assuming
+				# that album names are pretty unique.
+				txt_entry = album.a.get_text()
+				txt_entry = txt_entry.split("- ", 1)[1]	
+				txt_entry += " - " + str(i)
+				print txt_entry
+				f.write((txt_entry.encode('ascii', 'ignore')) + "\n")
+
+			older = soup.find(class_="older")
+
+			if older is not None and older.string:
+				url = site_prefix + older.a["href"]
+				time.sleep(0.5) 
+			else:
+				last_page = True
 
 	f.close()
-	return len(all_entries)
+'''
+This one is different from above: Needle Drop is used as 
+reference, so only albums present there will be looked for
+on other sites.
+
+This function will simply take an album and return the
+rating!
+
+We have to use urllib2 here because Pitchfork kept 403'ing
+me when I didn't have a lil message to accompany it.
+'''
+def scrape_pitchfork(album):
+
+	# Let's be courteous :)
+	time.sleep(0.5)
+
+	def fix_album(album):
+		return album.replace(" ", "%20")
+
+	# Step 1: Look for the review using the search function.
+	base_url = "http://pitchfork.com"
+	url = base_url + "/search/?query=" + "\"" + fix_album(album) + "\""
+	hdr = {'User-Agent': 'Hi Pitchfork, I\'m just scraping a few hundred of your albums, promise I won\'t try and hurt the servers :)'}
+	req = urllib2.Request(url, headers=hdr)
+	html = urllib2.urlopen(req).read()
+	soup = BeautifulSoup(html, "html.parser")
+
+	# Step 2: grab the correct one, and go to that page!
+	reviews = soup.find_all("div", class_="review")
+
+	if len(reviews) <= 0:
+		return -1
+	else:
+		big_ol_div = reviews[0]
+		relative_url = big_ol_div.find(class_="album-link")["href"]
+
+		url2 = base_url + relative_url
+		req = urllib2.Request(url2, headers=hdr)
+		html = urllib2.urlopen(req).read()
+		soup = BeautifulSoup(html, "html.parser")
+
+		# Step 3: Grab dat score
+		score = soup.find(class_="score").string
+		return float(score)
+
+
 
 
 
