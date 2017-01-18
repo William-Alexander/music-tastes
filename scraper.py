@@ -1,4 +1,5 @@
-import urllib2
+#import urllib2
+import requests
 from bs4 import BeautifulSoup
 import time
 
@@ -11,9 +12,14 @@ last_page = False
 hdr = {'User-Agent': 'your music nerd friend, Will :)'}
 
 while not last_page:
-	req = urllib2.Request(url, headers=hdr)
-	html = urllib2.urlopen(req).read()
-	soup = BeautifulSoup(html, "html.parser")
+	r = requests.get(url)
+	soup = BeautifulSoup(r.text, "html.parser")
+	
+	# Check to see if we've been sending too many requests
+	# If so, just wait a second and try again! :)
+	if soup.title.string == "429 Too Many Requests":
+		time.sleep(1)
+		continue
 
 	page_entries = soup.find_all("h1", class_="entry-title")
 
@@ -21,11 +27,11 @@ while not last_page:
 		all_entries.append(album.a.get_text())
 		print album.a.get_text()
 
-	older = soup.find_all("div", class_="older")
-	#print older
+	#older = soup.find_all("div", class_="older")
+	older = soup.find(class_="older")
 
-	if older:
-		url = site_prefix + older[0].a["href"]
+	if older.string:
+		url = site_prefix + older.a["href"]
 		time.sleep(1) 
 	else:
 		last_page = True
