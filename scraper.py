@@ -1,42 +1,51 @@
-#import urllib2
+import sys
 import requests
 from bs4 import BeautifulSoup
 import time
 
-start_url = "http://www.theneedledrop.com/articles/?tag=6%2F10"
+def scrape_needledrop(rating):
+	def init_start_url(rating):
+		return ("http://www.theneedledrop.com/articles/?tag=" + 
+				str(rating) + "%2F10")
 
-site_prefix = "http://www.theneedledrop.com"
-all_entries = []
-url = start_url
-last_page = False
-hdr = {'User-Agent': 'your music nerd friend, Will :)'}
+	start_url = init_start_url(rating)
 
-while not last_page:
-	r = requests.get(url)
-	soup = BeautifulSoup(r.text, "html.parser")
-	
-	# Check to see if we've been sending too many requests
-	# If so, just wait a second and try again! :)
-	if soup.title.string == "429 Too Many Requests":
-		time.sleep(1)
-		continue
+	site_prefix = "http://www.theneedledrop.com"
+	all_entries = []
+	url = start_url
+	last_page = False
+	hdr = {'User-Agent': 'your music nerd friend, Will :)'}
 
-	page_entries = soup.find_all("h1", class_="entry-title")
+	file_name = "needledrop" + str(rating) + ".txt"
+	f = open(file_name, 'w')
 
-	for album in page_entries:
-		all_entries.append(album.a.get_text())
-		print album.a.get_text()
+	while not last_page:
+		r = requests.get(url)
+		soup = BeautifulSoup(r.text, "html.parser")
 
-	#older = soup.find_all("div", class_="older")
-	older = soup.find(class_="older")
+		# Check to see if we've been sending too many requests
+		# If so, just wait a second and try again! :)
+		if soup.title.string == "429 Too Many Requests":
+			time.sleep(1)
+			continue
 
-	if older.string:
-		url = site_prefix + older.a["href"]
-		time.sleep(1) 
-	else:
-		last_page = True
+		page_entries = soup.find_all("h1", class_="entry-title")
 
-print len(all_entries)
+		for album in page_entries:
+			all_entries.append(album.a.get_text())
+			print album.a.get_text()
+			f.write((album.a.get_text().encode('ascii', 'ignore')) + "\n")
+
+		older = soup.find(class_="older")
+
+		if older is not None and older.string:
+			url = site_prefix + older.a["href"]
+			time.sleep(0.5) 
+		else:
+			last_page = True
+
+	f.close()
+	return len(all_entries)
 
 
 
