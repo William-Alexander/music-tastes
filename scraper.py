@@ -103,10 +103,6 @@ def scrape_pitchfork(album):
 		for review in reviews:
 			pitchfork_name = review.find(class_="title").string.lower()
 			needledrop_name = album.lower()
-			print pitchfork_name
-			print strip_chars(pitchfork_name) 
-			print needledrop_name
-			print strip_chars(needledrop_name)
 			if strip_chars(pitchfork_name) == strip_chars(needledrop_name):
 				big_ol_div = review
 		if big_ol_div is "":
@@ -158,15 +154,14 @@ content = [x.split(" - ")[0] for x in content]
 
 # Now, let's get all the album reviews we can, and write them
 # to the pitchfork.txt file.
-'''
+
 with open("pitchfork.txt", 'w') as f:
 	for album in content:
 		album_score = scrape_pitchfork(album)
 
 		if album_score == -1:
 			print album + " - " + str(album_score) + " " + strip_chars(album)
-		else:
-			print album + " - " + str(album_score)
+		#else:
+		#	print album + " - " + str(album_score)
 
 		f.write(album + " - " + str(album_score) + "\n")
-'''
