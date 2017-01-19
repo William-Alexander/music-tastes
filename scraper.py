@@ -1,6 +1,7 @@
 import sys
 import urllib2
 import requests
+import re
 from bs4 import BeautifulSoup
 import time
 
@@ -70,14 +71,15 @@ me when I didn't have a lil message to accompany it.
 def scrape_pitchfork(album):
 
 	# Let's be courteous :)
-	time.sleep(0.5)
+	time.sleep(1)
 
 	def fix_album(album):
+		album = strip_chars(album)
 		return album.replace(" ", "%20")
 
 	# Step 1: Look for the review using the search function.
 	base_url = "http://pitchfork.com"
-	url = base_url + "/search/?query=" + "\"" + fix_album(album) + "\""
+	url = base_url + "/search/?query="  + fix_album(album) 
 	hdr = {'User-Agent': 'Hi Pitchfork, I\'m just scraping a few hundred of your albums, promise I won\'t try and hurt the servers :)'}
 	req = urllib2.Request(url, headers=hdr)
 	html = urllib2.urlopen(req).read()
@@ -89,14 +91,30 @@ def scrape_pitchfork(album):
 	if len(reviews) <= 0:
 		return -1
 	else:
-		# Shit, I need to grab the correct one. The first one isn't
-		# always right.
+		# Shit, I need to grab the correct one. The first isn't
+		# always right. Basically I'm going to strip all non-char
+		# characters except for spaces, which (judging by my limited
+		# searching on Pitchfork) will mostly work! :)
+
+		# Initializing it for giggles.
 		big_ol_div = ""
-		for index, review in enumerate(reviews):
-			if review.find(class_="title").string.lower() == album.lower():
-				big_ol_div = reviews[index]
+
+		# Let's use enumerate b/c I need to know where in the array it is
+		for review in reviews:
+			pitchfork_name = review.find(class_="title").string.lower()
+			needledrop_name = album.lower()
+			print pitchfork_name
+			print strip_chars(pitchfork_name) 
+			print needledrop_name
+			print strip_chars(needledrop_name)
+			if strip_chars(pitchfork_name) == strip_chars(needledrop_name):
+				big_ol_div = review
 		if big_ol_div is "":
-			big_ol_div = reviews[0]
+			#big_ol_div = reviews[0]
+
+			# I prefer to get less data points that are more likely to be
+			# correct, so let's be careful yah? :)
+			return -1
 		relative_url = big_ol_div.find(class_="album-link")["href"]
 
 		url2 = base_url + relative_url
@@ -108,6 +126,30 @@ def scrape_pitchfork(album):
 		score = soup.find(class_="score").string
 		return float(score)
 
+'''
+So the idea is that if we take out all of the characters except for the 
+alphabet, numbers, and spaces, we can compare things more easily since
+different sites use different encodings and aren't always consistent with
+punctuation.
+'''
+def strip_chars(my_str):
+	"""
+	Removes all annoying characters and articles, ya dig?
+
+	w.r.t remove_articles: every rule requires a precident, right? Pitchfork
+	and Needle Drop differ sometimes in how they use articles, so I just get
+	rid of 'em all.
+
+	IT'S NOT PERFECT unfortunately but whatever it's conservative.
+	"""
+	def remove_articles(my_str):
+		s = ["a", "an", "and", "the", "&"]
+		return ' '.join(filter(lambda w: not w in s, my_str.split()))
+	my_str = remove_articles(my_str)
+	regex = re.compile('[^a-zA-Z0-9\'\- ]')
+	return regex.sub('', my_str)
+
+
 # Let's get a list of the Needle Drop albums
 with open("needledrop.txt") as f:
 	content = f.readlines()
@@ -116,13 +158,15 @@ content = [x.split(" - ")[0] for x in content]
 
 # Now, let's get all the album reviews we can, and write them
 # to the pitchfork.txt file.
-
 '''
 with open("pitchfork.txt", 'w') as f:
 	for album in content:
 		album_score = scrape_pitchfork(album)
-		print album + " - " + str(album_score)
-		if album_score > 0:
-			f.write(album + " - " + str(album_score) + "\n")
-'''
 
+		if album_score == -1:
+			print album + " - " + str(album_score) + " " + strip_chars(album)
+		else:
+			print album + " - " + str(album_score)
+
+		f.write(album + " - " + str(album_score) + "\n")
+'''
