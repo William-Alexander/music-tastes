@@ -4,6 +4,7 @@ import requests
 import re
 from bs4 import BeautifulSoup
 import time
+from useful_funcs import strip_chars
 
 '''
 Should grab every album from the Needle Drop site and 
@@ -71,7 +72,7 @@ me when I didn't have a lil message to accompany it.
 def scrape_pitchfork(album):
 
 	# Let's be courteous :)
-	time.sleep(1)
+	time.sleep(2)
 
 	def fix_album(album):
 		album = strip_chars(album)
@@ -80,7 +81,7 @@ def scrape_pitchfork(album):
 	# Step 1: Look for the review using the search function.
 	base_url = "http://pitchfork.com"
 	url = base_url + "/search/?query="  + fix_album(album) 
-	hdr = {'User-Agent': 'Hi Pitchfork, I\'m just scraping a few hundred of your albums, promise I won\'t try and hurt the servers :)'}
+	hdr = {'User-Agent': 'Hi Pitchfork, sorry about all the requests, I\'ll be done asap! -Will :)'}
 	req = urllib2.Request(url, headers=hdr)
 	html = urllib2.urlopen(req).read()
 	soup = BeautifulSoup(html, "html.parser")
@@ -122,30 +123,8 @@ def scrape_pitchfork(album):
 		score = soup.find(class_="score").string
 		return float(score)
 
+
 '''
-So the idea is that if we take out all of the characters except for the 
-alphabet, numbers, and spaces, we can compare things more easily since
-different sites use different encodings and aren't always consistent with
-punctuation.
-'''
-def strip_chars(my_str):
-	"""
-	Removes all annoying characters and articles, ya dig?
-
-	w.r.t remove_articles: every rule requires a precident, right? Pitchfork
-	and Needle Drop differ sometimes in how they use articles, so I just get
-	rid of 'em all.
-
-	IT'S NOT PERFECT unfortunately but whatever it's conservative.
-	"""
-	def remove_articles(my_str):
-		s = ["a", "an", "and", "the", "&"]
-		return ' '.join(filter(lambda w: not w in s, my_str.split()))
-	my_str = remove_articles(my_str)
-	regex = re.compile('[^a-zA-Z0-9\'\- ]')
-	return regex.sub('', my_str)
-
-
 # Let's get a list of the Needle Drop albums
 with open("needledrop.txt") as f:
 	content = f.readlines()
@@ -161,7 +140,8 @@ with open("pitchfork.txt", 'w') as f:
 
 		if album_score == -1:
 			print album + " - " + str(album_score) + " " + strip_chars(album)
-		#else:
-		#	print album + " - " + str(album_score)
+		else:
+			print album + " - " + str(album_score)
 
 		f.write(album + " - " + str(album_score) + "\n")
+'''
