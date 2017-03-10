@@ -1,13 +1,11 @@
-# musical-posers
+# music-tastes
 
-Just kidding about the posers. In order to practice using Python for web scraping and to satisfy my own curiosity (and maybe 1-2% that sweet sweet Reddit karma) I'm going to see how different music review sites correlate w.r.t. album reviews. If the site in question doesn't have an explicitly numerical system but does have something that can map very easily to numbers (like using 1-5 stars) then that'll also be in consideration.
-
-Inspired by a thought while watching a Needle Drop review. 
+For the purpose of practicing BeautifulSoup usage and to satisfy my curiosity about how different people perceive the quality of musical albums, I'm going to be comparing ratings given by multiple different ratings sites/people. In particular, since I was inspired while watching one of his videos, they'll all be compared to the man himself, Anthony Fantano. 
 
 Sites to be included so far:
 
 - Needle Drop
 - Pitchfork 
-- Sputnik Music (the site I'm most familiar with)
-- Metacritic?
+- Metacritic
+- Sputnikmusic if I can figure out how to submit a god damn form
 
