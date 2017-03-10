@@ -37,12 +37,16 @@ for i in xrange(0, 11):
 		page_entries = soup.find_all("h1", class_="entry-title")
 
 		for album in page_entries:
-			# This time, we're keeping the artist name. Change non-ascii
-			# characters into their ascii counterparts, tho.
-			txt_entry = str(unidecode.unidecode(album.a.get_text()))
-			txt_entry += " - " + str(i)
-			print txt_entry
-			f.write((txt_entry.encode('ascii', 'ignore')) + "\n")
+			text_entry = str(unidecode.unidecode(album.a.get_text()))
+			# Fuck the complicated ones
+			text_split = text_entry.split(" - ")
+			if len(text_split) > 2:
+				print "fuck all y\'all"
+				continue
+			# Add in delimeters that won't be mistaken for other shit
+			text_entry = text_split[0] + " ::: " + text_split[0] + " ::: " + str(i)
+			f.write(text_entry + "\n")
+			print text_entry
 
 		older = soup.find(class_="older")
 
