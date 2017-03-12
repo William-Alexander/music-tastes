@@ -11,12 +11,14 @@ with open('needledrop.txt') as f:
 
 data_list = []
 for line in zip(needledrop, pitchfork):
-	needle_score, pitch_score = line
-	needle_score = float(needle_score.split(" ::: ")[2].strip('\n'))
-	pitch_score = float(pitch_score.split(" ::: ")[2].strip('\n'))
+	needle, pitch = line
+	_, _, needle_score, genre = needle.split(" ::: ")
+	needle_score = float(needle_score)
+	genre = genre.strip('\n')
+	pitch_score = float(pitch.split(" ::: ")[2].strip('\n'))
 
 	if pitch_score > 0:
-		data_list.append((needle_score, pitch_score))
+		data_list.append((needle_score, pitch_score, genre))
 	else:
 		continue
 
