@@ -14,28 +14,54 @@ file_name = "needledrop.txt"
 f = open(file_name, 'w')
 headers = {'user-agent': 'Your friend, Will.'}
 
+
 def get_genre(album_url):
 	"""
 	Retrieves genre of album, given that album's url
 	"""
 	genre_list = ["rock", "pop", "electronic", "hip-hop", "loud-rock", "other", "classic"]
 
+	# Get the website. If needledrop yells at us, try again?
 	album_r = requests.get(album_url, headers=headers)
 	album_soup = BeautifulSoup(album_r.text, 'html.parser')
 	if album_soup.title.string == "429 Too Many Requests":
-		return "no_genre_1"
+		sys.sleep(1)
+		return get_genre(album_url)
 
+	# Get all the tags.
 	classes = album_soup.find("article")["class"]
 	tags = [x[4:] for x in classes if x[0:4] == "tag-"]
 
+	# For each genre, check how many of the tags contain that
+	# genre name like alternative-hip-hop for hip-hop, etc...
+	# These will each count. If it finds an *exact* match, tho,
+	# then just stop :)
+
+	# Honestly most of the songs will have a specific genre: judging
+	# by my earlier work, only about ~50 didn't fall directly into 
+	# any category.
 	relevant_genres = []
 	for genre in genre_list:
-		if genre in tags:
-			relevant_genres.append(genre)
-	# I guess if there's multiple, just pick the first?
+		for tag in tags:
+			if genre == tag:
+				return genre
+			elif genre in tag:
+				relevant_genres.append(genre)
+			else:
+				pass
+
+	# Then we pick majority. In case of a tie, I'll decide myself.
 	if relevant_genres:
-		return relevant_genres[0]
-	return "no_genre_2"
+		max_num = max(map(relevant_genres.count, relevant_genres))
+		max_set = set(x for x in relevant_genres if relevant_genres.count(x) == max_num)
+		if len(max_set) <= 0:
+			return "no-genre"
+		elif len(max_set) == 1:
+			return max_set.pop()
+		else:
+			return str(max_set)
+	return "no-genre"
+
 
 
 for i in xrange(0, 11):
@@ -76,7 +102,7 @@ for i in xrange(0, 11):
 			# Add in delimeters that won't be mistaken for other shit
 			text_entry = text_split[0] + " ::: " + text_split[1] + " ::: " + str(i) + " ::: " + genre
 			f.write(text_entry + "\n")
-			print text_entry
+			print text_split[1] + ' - ' + str(i) + ' - ' + genre
 
 		older = soup.find(class_="older")
 
